@@ -2,16 +2,18 @@ package ua.edu.viti.military.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ua.edu.viti.military.dto.request.VehicleCategoryCreateDTO;
 import ua.edu.viti.military.dto.request.VehicleCategoryUpdateDTO;
 import ua.edu.viti.military.dto.response.VehicleCategoryResponseDTO;
 import ua.edu.viti.military.service.VehicleCategoryService;
+import ua.edu.viti.military.validation.OnCreate;
+import ua.edu.viti.military.validation.OnUpdate;
 
 import java.util.List;
 
@@ -27,7 +29,7 @@ public class VehicleCategoryController {
     @PostMapping
     @Operation(summary = "Створити нову категорію")
     public ResponseEntity<VehicleCategoryResponseDTO> create(
-            @Valid @RequestBody VehicleCategoryCreateDTO dto) {
+            @Validated(OnCreate.class) @RequestBody VehicleCategoryCreateDTO dto) {
         log.info("REST request to create category: {}", dto);
         VehicleCategoryResponseDTO created = categoryService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
@@ -49,7 +51,7 @@ public class VehicleCategoryController {
     @Operation(summary = "Оновити категорію")
     public ResponseEntity<VehicleCategoryResponseDTO> update(
             @PathVariable Long id,
-            @Valid @RequestBody VehicleCategoryUpdateDTO dto) {
+            @Validated(OnUpdate.class) @RequestBody VehicleCategoryUpdateDTO dto) {
         return ResponseEntity.ok(categoryService.update(id, dto));
     }
 }

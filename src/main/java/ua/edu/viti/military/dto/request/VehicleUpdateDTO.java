@@ -1,32 +1,39 @@
 package ua.edu.viti.military.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ua.edu.viti.military.entity.VehicleStatus;
+import ua.edu.viti.military.validation.OnUpdate;
 
 import java.time.LocalDate;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "Дані для оновлення стану транспортного засобу")
 public class VehicleUpdateDTO {
-    // В UpdateDTO ми прибираємо поля, які не можна змінювати (наприклад, chassisNumber, registrationNumber)
-    // Або залишаємо тільки ті, що часто змінюються під час експлуатації
 
-    @PositiveOrZero(message = "Пробіг не може бути від'ємним")
+    @PositiveOrZero(message = "Пробіг не може бути від'ємним", groups = OnUpdate.class)
+    @Schema(description = "Оновлений пробіг", example = "15500")
     private Integer mileage;
 
+    @Schema(description = "Зміна статусу (наприклад, відправка на ремонт)", example = "IN_MAINTENANCE")
     private VehicleStatus status;
 
+    @Schema(description = "Дата проведення ТО (якщо редагується вручну)")
     private LocalDate lastMaintenanceDate;
 
-    @PositiveOrZero
+    @PositiveOrZero(groups = OnUpdate.class)
+    @Schema(description = "Пробіг на момент останнього ТО")
     private Integer lastMaintenanceMileage;
 
-    private Long driverId; // Можливість змінити водія (або зняти його, якщо null)
+    @Schema(description = "Призначити нового водія (ID)")
+    private Long driverId;
 
-    @Positive
-    private Double fuelConsumption; // Наприклад, після ремонту змінилась витрата
+    @Positive(groups = OnUpdate.class)
+    @Schema(description = "Нова норма витрати пального", example = "12.5")
+    private Double fuelConsumption;
 }

@@ -2,16 +2,18 @@ package ua.edu.viti.military.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ua.edu.viti.military.dto.request.DriverCreateDTO;
 import ua.edu.viti.military.dto.request.DriverUpdateDTO;
 import ua.edu.viti.military.dto.response.DriverResponseDTO;
 import ua.edu.viti.military.service.DriverService;
+import ua.edu.viti.military.validation.OnCreate;
+import ua.edu.viti.military.validation.OnUpdate;
 
 import java.util.List;
 
@@ -27,8 +29,7 @@ public class DriverController {
     @PostMapping
     @Operation(summary = "Додати водія")
     public ResponseEntity<DriverResponseDTO> create(
-            @Valid @RequestBody DriverCreateDTO dto) {
-        log.info("REST request to create driver: {}", dto);
+            @Validated(OnCreate.class) @RequestBody DriverCreateDTO dto) {
         DriverResponseDTO created = driverService.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
@@ -49,7 +50,7 @@ public class DriverController {
     @Operation(summary = "Оновити дані водія")
     public ResponseEntity<DriverResponseDTO> update(
             @PathVariable Long id,
-            @Valid @RequestBody DriverUpdateDTO dto) {
+            @Validated(OnUpdate.class) @RequestBody DriverUpdateDTO dto) {
         return ResponseEntity.ok(driverService.update(id, dto));
     }
 }
