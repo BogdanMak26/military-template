@@ -66,6 +66,13 @@ public class VehicleCategoryService {
 
         return toDTO(categoryRepository.save(category));
     }
+    @Transactional
+    public void delete(Long id) {
+        if (!categoryRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Категорію з ID " + id + " не знайдено");
+        }
+        categoryRepository.deleteById(id);
+    }
     private VehicleCategoryResponseDTO toDTO(VehicleCategory entity) {
         return new VehicleCategoryResponseDTO(
                 entity.getId(),

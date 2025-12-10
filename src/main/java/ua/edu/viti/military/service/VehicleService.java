@@ -30,7 +30,7 @@ public class VehicleService {
     private final DriverRepository driverRepository;
     private final DriverService driverService; // Використовуємо для маппінгу водія
 
-    // === CREATE ===
+
     @Transactional
     public VehicleResponseDTO create(VehicleCreateDTO dto) {
         log.info("Creating vehicle with reg number: {}", dto.getRegistrationNumber());
@@ -116,16 +116,19 @@ public class VehicleService {
                     .orElseThrow(() -> new ResourceNotFoundException("Водія не знайдено"));
             vehicle.setDriver(newDriver);
         } else {
-            // Якщо передали null, можна, наприклад, залишити старого або видалити водія
-            // Тут реалізуємо: якщо driverId не передано - не змінюємо.
-            // Щоб зняти водія, треба передати спеціальний прапор або -1 (залежить від вимог),
-            // але поки залишимо просту логіку.
+
         }
 
         return toDTO(vehicleRepository.save(vehicle));
     }
 
-    // Метод для проведення ТО (бізнес-дія)
+    @Transactional
+    public void delete(Long id) {
+        if (!vehicleRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Транспорт з ID " + id + " не знайдено");
+        }
+        vehicleRepository.deleteById(id);
+    }
     @Transactional
     public void performMaintenance(Long vehicleId) {
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
@@ -139,7 +142,7 @@ public class VehicleService {
         log.info("Maintenance performed for vehicle ID: {}", vehicleId);
     }
 
-    // === MAPPING ===
+
     private VehicleResponseDTO toDTO(Vehicle entity) {
         VehicleResponseDTO dto = new VehicleResponseDTO();
         dto.setId(entity.getId());
@@ -167,7 +170,7 @@ public class VehicleService {
         dto.setLastMaintenanceDate(entity.getLastMaintenanceDate());
         dto.setLastMaintenanceMileage(entity.getLastMaintenanceMileage());
 
-        // Маппінг водія через сервіс водіїв або вручну
+
         if (entity.getDriver() != null) {
             dto.setDriver(driverService.toDTO(entity.getDriver()));
         }

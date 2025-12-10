@@ -95,4 +95,10 @@ public class VehicleController {
             @Validated(OnUpdate.class) @RequestBody VehicleUpdateDTO dto) { // <-- Тут мала б бути група OnUpdate, якщо ви створили DTO для Update з групами
         return ResponseEntity.ok(vehicleService.update(id, dto));
     }
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Видалити транспорт")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        vehicleService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
 }

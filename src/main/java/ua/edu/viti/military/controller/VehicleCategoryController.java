@@ -54,4 +54,10 @@ public class VehicleCategoryController {
             @Validated(OnUpdate.class) @RequestBody VehicleCategoryUpdateDTO dto) {
         return ResponseEntity.ok(categoryService.update(id, dto));
     }
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Видалити категорію")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        categoryService.delete(id);
+        return ResponseEntity.noContent().build(); // Повертає статус 204 No Content
+    }
 }

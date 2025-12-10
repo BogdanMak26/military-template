@@ -76,6 +76,13 @@ public class DriverService {
 
         return toDTO(driverRepository.save(driver));
     }
+    @Transactional
+    public void delete(Long id) {
+        if (!driverRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Водія з ID " + id + " не знайдено");
+        }
+        driverRepository.deleteById(id);
+    }
 
     // --- MAPPING ---
     public DriverResponseDTO toDTO(Driver entity) {

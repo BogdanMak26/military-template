@@ -53,4 +53,10 @@ public class DriverController {
             @Validated(OnUpdate.class) @RequestBody DriverUpdateDTO dto) {
         return ResponseEntity.ok(driverService.update(id, dto));
     }
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Видалити водія")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        driverService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
 }
