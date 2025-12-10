@@ -59,13 +59,22 @@ public class VehicleCategoryService {
         VehicleCategory category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Категорію не знайдено"));
 
-        if (dto.getName() != null) category.setName(dto.getName());
-        if (dto.getDescription() != null) category.setDescription(dto.getDescription());
-        if (dto.getRequiredLicense() != null) category.setRequiredLicense(dto.getRequiredLicense());
-        if (dto.getMaxLoadCapacity() != null) category.setMaxLoadCapacity(dto.getMaxLoadCapacity());
+        if (dto.getName() != null) {
+            category.setName(dto.getName());
+        }
+        if (dto.getDescription() != null) {
+            category.setDescription(dto.getDescription());
+        }
+        if (dto.getRequiredLicense() != null) {
+            category.setRequiredLicense(dto.getRequiredLicense());
+        }
+        if (dto.getMaxLoadCapacity() != null) {
+            category.setMaxLoadCapacity(dto.getMaxLoadCapacity());
+        }
 
         return toDTO(categoryRepository.save(category));
     }
+
     @Transactional
     public void delete(Long id) {
         if (!categoryRepository.existsById(id)) {
@@ -73,6 +82,7 @@ public class VehicleCategoryService {
         }
         categoryRepository.deleteById(id);
     }
+
     private VehicleCategoryResponseDTO toDTO(VehicleCategory entity) {
         return new VehicleCategoryResponseDTO(
                 entity.getId(),

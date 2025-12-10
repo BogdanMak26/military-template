@@ -64,18 +64,37 @@ public class DriverService {
         Driver driver = driverRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Водія не знайдено"));
 
-        if (dto.getFirstName() != null) driver.setFirstName(dto.getFirstName());
-        if (dto.getLastName() != null) driver.setLastName(dto.getLastName());
-        if (dto.getMiddleName() != null) driver.setMiddleName(dto.getMiddleName());
-        if (dto.getRank() != null) driver.setRank(dto.getRank());
-        if (dto.getLicenseNumber() != null) driver.setLicenseNumber(dto.getLicenseNumber());
-        if (dto.getLicenseCategories() != null) driver.setLicenseCategories(dto.getLicenseCategories());
-        if (dto.getLicenseExpiryDate() != null) driver.setLicenseExpiryDate(dto.getLicenseExpiryDate());
-        if (dto.getPhoneNumber() != null) driver.setPhoneNumber(dto.getPhoneNumber());
-        if (dto.getIsActive() != null) driver.setIsActive(dto.getIsActive());
+        if (dto.getFirstName() != null) {
+            driver.setFirstName(dto.getFirstName());
+        }
+        if (dto.getLastName() != null) {
+            driver.setLastName(dto.getLastName());
+        }
+        if (dto.getMiddleName() != null) {
+            driver.setMiddleName(dto.getMiddleName());
+        }
+        if (dto.getRank() != null) {
+            driver.setRank(dto.getRank());
+        }
+        if (dto.getLicenseNumber() != null) {
+            driver.setLicenseNumber(dto.getLicenseNumber());
+        }
+        if (dto.getLicenseCategories() != null) {
+            driver.setLicenseCategories(dto.getLicenseCategories());
+        }
+        if (dto.getLicenseExpiryDate() != null) {
+            driver.setLicenseExpiryDate(dto.getLicenseExpiryDate());
+        }
+        if (dto.getPhoneNumber() != null) {
+            driver.setPhoneNumber(dto.getPhoneNumber());
+        }
+        if (dto.getIsActive() != null) {
+            driver.setIsActive(dto.getIsActive());
+        }
 
         return toDTO(driverRepository.save(driver));
     }
+
     @Transactional
     public void delete(Long id) {
         if (!driverRepository.existsById(id)) {
@@ -86,7 +105,9 @@ public class DriverService {
 
     // --- MAPPING ---
     public DriverResponseDTO toDTO(Driver entity) {
-        if (entity == null) return null;
+        if (entity == null) {
+            return null;
+        }
         return new DriverResponseDTO(
                 entity.getId(),
                 entity.getMilitaryId(),

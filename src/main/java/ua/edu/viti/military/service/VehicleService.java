@@ -8,7 +8,11 @@ import ua.edu.viti.military.dto.request.VehicleCreateDTO;
 import ua.edu.viti.military.dto.request.VehicleUpdateDTO;
 import ua.edu.viti.military.dto.response.VehicleCategoryResponseDTO;
 import ua.edu.viti.military.dto.response.VehicleResponseDTO;
-import ua.edu.viti.military.entity.*;
+import ua.edu.viti.military.entity.Driver;
+import ua.edu.viti.military.entity.Vehicle;
+import ua.edu.viti.military.entity.VehicleCategory;
+import ua.edu.viti.military.entity.VehicleStatus;
+import ua.edu.viti.military.exception.BusinessLogicException;
 import ua.edu.viti.military.exception.DuplicateResourceException;
 import ua.edu.viti.military.exception.ResourceNotFoundException;
 import ua.edu.viti.military.repository.DriverRepository;
@@ -28,8 +32,7 @@ public class VehicleService {
     private final VehicleRepository vehicleRepository;
     private final VehicleCategoryRepository categoryRepository;
     private final DriverRepository driverRepository;
-    private final DriverService driverService; // Використовуємо для маппінгу водія
-
+    private final DriverService driverService;
 
     @Transactional
     public VehicleResponseDTO create(VehicleCreateDTO dto) {
@@ -96,27 +99,41 @@ public class VehicleService {
                 .collect(Collectors.toList());
     }
 
-    // === UPDATE ===
+
     @Transactional
     public VehicleResponseDTO update(Long id, VehicleUpdateDTO dto) {
         Vehicle vehicle = vehicleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Транспорт не знайдено"));
 
-        if (dto.getMileage() != null) vehicle.setMileage(dto.getMileage());
-        if (dto.getStatus() != null) vehicle.setStatus(dto.getStatus());
-        if (dto.getFuelConsumption() != null) vehicle.setFuelConsumption(dto.getFuelConsumption());
+        if (dto.getMileage() != null) {
+            vehicle.setMileage(dto.getMileage());
+        }
+        if (dto.getStatus() != null) {
+            vehicle.setStatus(dto.getStatus());
+        }
+        if (dto.getFuelConsumption() != null) {
+            vehicle.setFuelConsumption(dto.getFuelConsumption());
+        }
 
         // Оновлення ТО
-        if (dto.getLastMaintenanceDate() != null) vehicle.setLastMaintenanceDate(dto.getLastMaintenanceDate());
-        if (dto.getLastMaintenanceMileage() != null) vehicle.setLastMaintenanceMileage(dto.getLastMaintenanceMileage());
+        if (dto.getLastMaintenanceDate() != null) {
+            vehicle.setLastMaintenanceDate(dto.getLastMaintenanceDate());
+        }
+        if (dto.getLastMaintenanceMileage() != null) {
+            vehicle.setLastMaintenanceMileage(dto.getLastMaintenanceMileage());
+        }
 
         // Логіка зміни водія
         if (dto.getDriverId() != null) {
+            // Бізнес-правило: не призначати водія на несправну машину
+            if (vehicle.getStatus() == VehicleStatus.IN_MAINTENANCE
+                    || vehicle.getStatus() == VehicleStatus.OUT_OF_SERVICE) {
+                throw new BusinessLogicException("Не можна призначити водія на транспорт, що перебуває на ремонті або списаний");
+            }
+
             Driver newDriver = driverRepository.findById(dto.getDriverId())
                     .orElseThrow(() -> new ResourceNotFoundException("Водія не знайдено"));
             vehicle.setDriver(newDriver);
-        } else {
-
         }
 
         return toDTO(vehicleRepository.save(vehicle));
@@ -129,6 +146,7 @@ public class VehicleService {
         }
         vehicleRepository.deleteById(id);
     }
+
     @Transactional
     public void performMaintenance(Long vehicleId) {
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
@@ -141,7 +159,6 @@ public class VehicleService {
         vehicleRepository.save(vehicle);
         log.info("Maintenance performed for vehicle ID: {}", vehicleId);
     }
-
 
     private VehicleResponseDTO toDTO(Vehicle entity) {
         VehicleResponseDTO dto = new VehicleResponseDTO();
