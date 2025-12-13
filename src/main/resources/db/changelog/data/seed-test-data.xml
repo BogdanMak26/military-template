@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="seed-test-data-v1" author="makarenko" context="dev">
+        <insert tableName="drivers">
+            <column name="military_id" value="AB-123456"/>
+            <column name="first_name" value="Іван"/>
+            <column name="last_name" value="Коваленко"/>
+            <column name="rank" value="Сержант"/>
+            <column name="license_number" value="BXT123456"/>
+            <column name="license_categories" value="B, C"/>
+            <column name="is_active" valueBoolean="true"/>
+        </insert>
+
+        <insert tableName="vehicles">
+            <column name="registration_number" value="1111-Б4"/>
+            <column name="model" value="КрАЗ-6322"/>
+            <column name="category_id" valueNumeric="1"/> <column name="driver_id" valueNumeric="1"/> <column name="status" value="OPERATIONAL"/>
+            <column name="mileage" valueNumeric="5000"/>
+            <column name="fuel_type" value="DIESEL"/>
+            <column name="maintenance_interval_km" valueNumeric="10000"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

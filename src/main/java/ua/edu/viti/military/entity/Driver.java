@@ -43,7 +43,7 @@ public class Driver {
     private String licenseNumber;
 
     @Column(name = "license_categories", length = 50)
-    private String licenseCategories; // наприклад: "B,C,CE,D"
+    private String licenseCategories;
 
     @Column(name = "license_expiry_date")
     private LocalDate licenseExpiryDate;

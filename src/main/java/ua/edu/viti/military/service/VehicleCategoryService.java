@@ -1,7 +1,6 @@
 package ua.edu.viti.military.service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ua.edu.viti.military.dto.request.VehicleCategoryCreateDTO;
@@ -10,89 +9,72 @@ import ua.edu.viti.military.dto.response.VehicleCategoryResponseDTO;
 import ua.edu.viti.military.entity.VehicleCategory;
 import ua.edu.viti.military.exception.DuplicateResourceException;
 import ua.edu.viti.military.exception.ResourceNotFoundException;
+import ua.edu.viti.military.mapper.VehicleCategoryMapper;
 import ua.edu.viti.military.repository.VehicleCategoryRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 @Transactional(readOnly = true)
 public class VehicleCategoryService {
 
     private final VehicleCategoryRepository categoryRepository;
+    private final VehicleCategoryMapper categoryMapper;
 
     @Transactional
+    @CacheEvict(value = "categories", allEntries = true)
     public VehicleCategoryResponseDTO create(VehicleCategoryCreateDTO dto) {
-        if (categoryRepository.existsByCode(dto.getCode())) {
-            throw new DuplicateResourceException("Категорія з кодом " + dto.getCode() + " вже існує");
-        }
-        if (categoryRepository.existsByName(dto.getName())) {
-            throw new DuplicateResourceException("Категорія з назвою " + dto.getName() + " вже існує");
+        if (categoryRepository.findByName(dto.getName()).isPresent()) {
+            throw new DuplicateResourceException("Категорія з назвою '" + dto.getName() + "' вже існує");
         }
 
-        VehicleCategory category = new VehicleCategory();
-        category.setName(dto.getName());
-        category.setCode(dto.getCode());
-        category.setDescription(dto.getDescription());
-        category.setRequiredLicense(dto.getRequiredLicense());
-        category.setMaxLoadCapacity(dto.getMaxLoadCapacity());
+        // MapStruct: DTO -> Entity
+        VehicleCategory category = categoryMapper.toEntity(dto);
 
-        return toDTO(categoryRepository.save(category));
+        return categoryMapper.toDTO(categoryRepository.save(category));
     }
 
-    public VehicleCategoryResponseDTO getById(Long id) {
-        return categoryRepository.findById(id)
-                .map(this::toDTO)
-                .orElseThrow(() -> new ResourceNotFoundException("Категорію з ID " + id + " не знайдено"));
-    }
-
+    @Cacheable(value = "categories")
     public List<VehicleCategoryResponseDTO> getAll() {
-        return categoryRepository.findAll().stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+        // MapStruct: List<Entity> -> List<DTO>
+        return categoryMapper.toDTOList(categoryRepository.findAll());
+    }
+
+    @Cacheable(value = "categories", key = "#id")
+    public VehicleCategoryResponseDTO getById(Long id) {
+        VehicleCategory category = categoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Категорію не знайдено"));
+        return categoryMapper.toDTO(category);
     }
 
     @Transactional
+    @CacheEvict(value = "categories", allEntries = true)
     public VehicleCategoryResponseDTO update(Long id, VehicleCategoryUpdateDTO dto) {
         VehicleCategory category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Категорію не знайдено"));
 
-        if (dto.getName() != null) {
-            category.setName(dto.getName());
-        }
-        if (dto.getDescription() != null) {
-            category.setDescription(dto.getDescription());
-        }
-        if (dto.getRequiredLicense() != null) {
-            category.setRequiredLicense(dto.getRequiredLicense());
-        }
-        if (dto.getMaxLoadCapacity() != null) {
-            category.setMaxLoadCapacity(dto.getMaxLoadCapacity());
+        // Перевірка на унікальність імені (якщо воно змінилося)
+        if (dto.getName() != null &&
+                !category.getName().equals(dto.getName()) &&
+                categoryRepository.findByName(dto.getName()).isPresent()) {
+            throw new DuplicateResourceException("Категорія з назвою '" + dto.getName() + "' вже існує");
         }
 
-        return toDTO(categoryRepository.save(category));
+        // Тепер маппер прийме правильний тип
+        categoryMapper.updateEntityFromDTO(dto, category);
+
+        return categoryMapper.toDTO(categoryRepository.save(category));
     }
 
     @Transactional
+    @CacheEvict(value = "categories", allEntries = true)
     public void delete(Long id) {
         if (!categoryRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Категорію з ID " + id + " не знайдено");
+            throw new ResourceNotFoundException("Категорію не знайдено");
         }
         categoryRepository.deleteById(id);
-    }
-
-    private VehicleCategoryResponseDTO toDTO(VehicleCategory entity) {
-        return new VehicleCategoryResponseDTO(
-                entity.getId(),
-                entity.getName(),
-                entity.getCode(),
-                entity.getDescription(),
-                entity.getRequiredLicense(),
-                entity.getMaxLoadCapacity(),
-                entity.getCreatedAt(),
-                entity.getUpdatedAt()
-        );
     }
 }

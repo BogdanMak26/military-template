@@ -10,10 +10,10 @@ import ua.edu.viti.military.dto.response.DriverResponseDTO;
 import ua.edu.viti.military.entity.Driver;
 import ua.edu.viti.military.exception.DuplicateResourceException;
 import ua.edu.viti.military.exception.ResourceNotFoundException;
+import ua.edu.viti.military.mapper.DriverMapper; // <--- Mapper
 import ua.edu.viti.military.repository.DriverRepository;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 public class DriverService {
 
     private final DriverRepository driverRepository;
+    private final DriverMapper driverMapper; // <--- Inject
 
     @Transactional
     public DriverResponseDTO create(DriverCreateDTO dto) {
@@ -32,31 +33,25 @@ public class DriverService {
             throw new DuplicateResourceException("Водій з правами " + dto.getLicenseNumber() + " вже існує");
         }
 
-        Driver driver = new Driver();
-        driver.setMilitaryId(dto.getMilitaryId());
-        driver.setFirstName(dto.getFirstName());
-        driver.setLastName(dto.getLastName());
-        driver.setMiddleName(dto.getMiddleName());
-        driver.setRank(dto.getRank());
-        driver.setLicenseNumber(dto.getLicenseNumber());
-        driver.setLicenseCategories(dto.getLicenseCategories());
-        driver.setLicenseExpiryDate(dto.getLicenseExpiryDate());
-        driver.setPhoneNumber(dto.getPhoneNumber());
-        driver.setIsActive(dto.getIsActive());
+        // MapStruct: DTO -> Entity
+        Driver driver = driverMapper.toEntity(dto);
 
-        return toDTO(driverRepository.save(driver));
+        // Встановлюємо дефолтні значення, якщо їх немає в DTO або маппері
+        if (driver.getIsActive() == null) {
+            driver.setIsActive(true);
+        }
+
+        return driverMapper.toDTO(driverRepository.save(driver));
     }
 
     public DriverResponseDTO getById(Long id) {
         return driverRepository.findById(id)
-                .map(this::toDTO)
+                .map(driverMapper::toDTO) // Використовуємо метод маппера як посилання
                 .orElseThrow(() -> new ResourceNotFoundException("Водія з ID " + id + " не знайдено"));
     }
 
     public List<DriverResponseDTO> getAllActive() {
-        return driverRepository.findByIsActive(true).stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+        return driverMapper.toDTOList(driverRepository.findByIsActive(true));
     }
 
     @Transactional
@@ -64,35 +59,10 @@ public class DriverService {
         Driver driver = driverRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Водія не знайдено"));
 
-        if (dto.getFirstName() != null) {
-            driver.setFirstName(dto.getFirstName());
-        }
-        if (dto.getLastName() != null) {
-            driver.setLastName(dto.getLastName());
-        }
-        if (dto.getMiddleName() != null) {
-            driver.setMiddleName(dto.getMiddleName());
-        }
-        if (dto.getRank() != null) {
-            driver.setRank(dto.getRank());
-        }
-        if (dto.getLicenseNumber() != null) {
-            driver.setLicenseNumber(dto.getLicenseNumber());
-        }
-        if (dto.getLicenseCategories() != null) {
-            driver.setLicenseCategories(dto.getLicenseCategories());
-        }
-        if (dto.getLicenseExpiryDate() != null) {
-            driver.setLicenseExpiryDate(dto.getLicenseExpiryDate());
-        }
-        if (dto.getPhoneNumber() != null) {
-            driver.setPhoneNumber(dto.getPhoneNumber());
-        }
-        if (dto.getIsActive() != null) {
-            driver.setIsActive(dto.getIsActive());
-        }
+        // 🔥 МАГІЯ: MapStruct сам перевіряє null і оновлює тільки потрібні поля
+        driverMapper.updateEntityFromDTO(dto, driver);
 
-        return toDTO(driverRepository.save(driver));
+        return driverMapper.toDTO(driverRepository.save(driver));
     }
 
     @Transactional
@@ -101,26 +71,5 @@ public class DriverService {
             throw new ResourceNotFoundException("Водія з ID " + id + " не знайдено");
         }
         driverRepository.deleteById(id);
-    }
-
-    // --- MAPPING ---
-    public DriverResponseDTO toDTO(Driver entity) {
-        if (entity == null) {
-            return null;
-        }
-        return new DriverResponseDTO(
-                entity.getId(),
-                entity.getMilitaryId(),
-                entity.getFirstName(),
-                entity.getLastName(),
-                entity.getRank(),
-                entity.getLicenseNumber(),
-                entity.getLicenseCategories(),
-                entity.getLicenseExpiryDate(),
-                entity.getPhoneNumber(),
-                entity.getIsActive(),
-                entity.getCreatedAt(),
-                entity.getUpdatedAt()
-        );
     }
 }

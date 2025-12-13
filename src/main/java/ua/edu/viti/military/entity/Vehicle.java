@@ -77,4 +77,7 @@ public class Vehicle {
 
     @LastModifiedDate
     private LocalDateTime updatedAt;
+
+    @Version
+    private Long version;
 }

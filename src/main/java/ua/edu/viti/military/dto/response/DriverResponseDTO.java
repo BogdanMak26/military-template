@@ -14,6 +14,7 @@ public class DriverResponseDTO {
     private String militaryId;
     private String firstName;
     private String lastName;
+    private String middleName;
     private String rank;
     private String licenseNumber;
     private String licenseCategories;

@@ -5,15 +5,15 @@ spring:
 
   # Database Configuration
   datasource:
-    url: jdbc:postgresql://localhost:5432/military_db
+    url: jdbc:postgresql://localhost:5433/military_db
     username: military_user
-    password: military_pass
+    password: military_password
     driver-class-name: org.postgresql.Driver
 
-  # JPA Configuration
+  # --- 2. JPA ---
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: true
     properties:
       hibernate:
@@ -21,7 +21,25 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
     open-in-view: false
 
-# SpringDoc OpenAPI Configuration
+  # --- 3. LIQUIBASE (Винесено з-під JPA) ---
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: true
+    drop-first: false
+
+  # --- 4. REDIS (Винесено з-під JPA) ---
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 60000ms
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 3600000 # 1 година
+
+# --- SWAGGER ---
 springdoc:
   api-docs:
     path: /v3/api-docs
@@ -30,17 +48,38 @@ springdoc:
     tags-sorter: alpha
     operations-sorter: alpha
 
-# Logging Configuration
+# --- LOGGING ---
 logging:
   level:
     ua.edu.viti.military: DEBUG
     org.springframework.web: INFO
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    liquibase: INFO
 
-# Server Configuration
+# --- SERVER ---
 server:
   port: 8081
   error:
     include-message: always
     include-binding-errors: always
+
+# --- JWT (На головному рівні) ---
+app:
+  jwt:
+    # Це секретний ключ
+    secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    expiration-ms: 86400000 # 24 години
+
+# --- ACTUATOR (Метрики) ---
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus,info
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: military-service

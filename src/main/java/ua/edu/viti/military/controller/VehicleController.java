@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ua.edu.viti.military.dto.request.VehicleCreateDTO;
@@ -41,6 +42,7 @@ public class VehicleController {
             @ApiResponse(responseCode = "400", description = "Помилка валідації (некоректні дані)"),
             @ApiResponse(responseCode = "409", description = "Транспорт з таким номером вже існує")
     })
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public ResponseEntity<VehicleResponseDTO> create(
             @Validated(OnCreate.class) @RequestBody VehicleCreateDTO dto) { // <-- Використовуємо групу OnCreate
         log.info("REST request to create vehicle: {}", dto.getRegistrationNumber());
@@ -61,6 +63,7 @@ public class VehicleController {
 
     @GetMapping
     @Operation(summary = "Отримати весь список", description = "Дозволяє фільтрувати техніку за статусом (справна, в ремонті тощо)")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR', 'VIEWER')")
     public ResponseEntity<List<VehicleResponseDTO>> getAll(
             @Parameter(description = "Статус техніки (опційно)")
             @RequestParam(required = false) VehicleStatus status) {
@@ -90,6 +93,7 @@ public class VehicleController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Оновити дані", description = "Часткове оновлення (пробіг, статус, водій).")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public ResponseEntity<VehicleResponseDTO> update(
             @PathVariable Long id,
             @Validated(OnUpdate.class) @RequestBody VehicleUpdateDTO dto) { // <-- Тут мала б бути група OnUpdate, якщо ви створили DTO для Update з групами
@@ -97,6 +101,7 @@ public class VehicleController {
     }
     @DeleteMapping("/{id}")
     @Operation(summary = "Видалити транспорт")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         vehicleService.delete(id);
         return ResponseEntity.noContent().build();
